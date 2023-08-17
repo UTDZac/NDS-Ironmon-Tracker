@@ -528,6 +528,80 @@ local function Program(initialTracker, initialMemoryAddresses, initialGameInfo, 
 		currentLocation = areaName
 	end
 
+	local lastDamageInfo = {}
+
+	local function tryShowDamageInfo()
+		frameCounters["tryShowDamageInfo"] = nil
+		if not battleHandler.isInBattle() then
+			lastDamageInfo.displayAmt = 0
+			lastDamageInfo.displayHits = {}
+			lastDamageInfo.allHits = {}
+			return
+		end
+		lastDamageInfo.displayAmt = 0
+		lastDamageInfo.displayHits = {}
+		for _, hit in pairs(lastDamageInfo.allHits or {}) do
+			lastDamageInfo.displayAmt = lastDamageInfo.displayAmt + hit
+			table.insert(lastDamageInfo.displayHits, hit)
+		end
+		-- Add the total at the end
+		table.insert(lastDamageInfo.displayHits, lastDamageInfo.displayAmt)
+		lastDamageInfo.allHits = {}
+	end
+
+	local function updateLastDamageInfo()
+		if not playerPokemon or playerPokemon.pokemonID == 0 or playerPokemon.pid == 0 then
+			return
+		end
+
+		local resetInfo = function(pid)
+			lastDamageInfo[pid] = {
+				curHP = playerPokemon.curHP,
+				maxHP = playerPokemon.stats.HP,
+				lastDamage = 0,
+			}
+			lastDamageInfo.displayAmt = 0
+			lastDamageInfo.allHits = {}
+		end
+
+		-- If no record for this active Pokémon's last damage info exists, create it
+		if not lastDamageInfo[playerPokemon.pid] then
+			resetInfo(playerPokemon.pid)
+		end
+		local prevInfo = lastDamageInfo[playerPokemon.pid]
+		if not battleHandler.isInBattle() or not prevInfo.curHP then
+			resetInfo(playerPokemon.pid)
+			return
+		end
+
+		-- TODO: Make sure this works if the player's active pokemon transforms
+		-- TODO: Test in doubles battles (should work, in theory)
+
+		-- Determine amount of damage taken by comparing missing HP values before-and-after
+		local prevMissingHP = prevInfo.maxHP - prevInfo.curHP
+		local curMissingHP = playerPokemon.stats.HP - playerPokemon.curHP
+		local curLastDamage = curMissingHP - prevMissingHP
+		-- Record the changes in HPs for future comparisons
+		prevInfo.curHP = playerPokemon.curHP
+		prevInfo.maxHP = playerPokemon.stats.HP
+		prevInfo.lastDamage = math.max(curLastDamage, 0) -- Ignore heals (negative damage)
+
+		-- If a change in damage taken occurs, add it to the total to show, then delay showing it for about 5 secs
+		-- The delay helps 1) prevent spoilers and 2) accumulate multi-hit and extra damage
+		if curLastDamage > 0 then
+			table.insert(lastDamageInfo.allHits, curLastDamage)
+			frameCounters["tryShowDamageInfo"] = FrameCounter(5 * 60, tryShowDamageInfo)
+		end
+	end
+
+	function self.getLastDamageTaken()
+		return lastDamageInfo.displayAmt or 0
+	end
+
+	function self.getLastDamageHits()
+		return lastDamageInfo.displayHits or {}
+	end
+
 	function self.getCurrentLocation()
 		return currentLocation
 	end
@@ -549,6 +623,7 @@ local function Program(initialTracker, initialMemoryAddresses, initialGameInfo, 
 		battleHandler.checkIfRunHasEnded()
 		HGSS_checkLeagueDefeated()
 		scanForHealingItems()
+		updateLastDamageInfo()
 		self.readBadgeMemory()
 		if not (inTrackedPokemonView or inLockedView) then
 			setPokemonForMainScreen()
