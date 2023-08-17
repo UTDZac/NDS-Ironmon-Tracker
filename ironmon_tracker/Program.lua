@@ -761,14 +761,10 @@ local function Program(initialTracker, initialMemoryAddresses, initialGameInfo, 
 	local function switchPokemonView()
 		if not inTrackedPokemonView or inLockedView then
 			if battleHandler.inBattleAndFetched() or (locked and lockedPokemonCopy ~= nil) then
-				if selectedPlayer == self.SELECTED_PLAYERS.PLAYER then
-					selectedPlayer = self.SELECTED_PLAYERS.ENEMY
+				if locked then
+					selectedPlayer = self.SELECTED_PLAYERS.PLAYER
 				else
-					if locked then
-						selectedPlayer = self.SELECTED_PLAYERS.PLAYER
-					else
-						selectedPlayer = battleHandler.updateEnemySlotIndex(selectedPlayer)
-					end
+					selectedPlayer = battleHandler.updateSlotIndex(selectedPlayer)
 				end
 				readMemory()
 				resetMainScreenHover()

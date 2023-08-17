@@ -23,6 +23,7 @@ local function BattleHandler(
     local playerBattleTeamPIDs = {list = {}}
     local enemyBattlers = {}
     local playerMonIndex = 0
+	local playerSlotIndex = 1
     local faintMonIndex = -1
     local firstBattleComplete = false
     local battleDataFetched = false
@@ -282,6 +283,9 @@ local function BattleHandler(
             lastValidPlayerBattlePID = activePID
         end
         local monIndex = playerBattleTeamPIDs[activePID]
+		if playerSlotIndex > 1 then
+			monIndex = playerSlotIndex - 1
+		end
         if monIndex ~= nil then
             playerMonIndex = monIndex
             pokemonDataReader.setCurrentBase(currentBase + monIndex * gameInfo.ENCRYPTED_POKEMON_SIZE)
@@ -578,6 +582,7 @@ local function BattleHandler(
         lastValidPlayerBattlePID = -1
         inBattle = true
         battleDataFetched = false
+		playerSlotIndex = 1
         enemySlotIndex = 1
         playerBattleTeamPIDs = {}
         enemyBattlers = {}
@@ -614,12 +619,18 @@ local function BattleHandler(
         return (inBattle and battleDataFetched)
     end
 
-    function self.updateEnemySlotIndex(selectedPlayer)
-        if enemySlotIndex == #enemyBattlers then
-            selectedPlayer = program.SELECTED_PLAYERS.PLAYER
-            enemySlotIndex = 1
+    function self.updateSlotIndex(selectedPlayer)
+        if selectedPlayer == program.SELECTED_PLAYERS.PLAYER then
+			selectedPlayer = program.SELECTED_PLAYERS.ENEMY
+            enemySlotIndex = playerSlotIndex
         else
-            enemySlotIndex = enemySlotIndex + 1
+            selectedPlayer = program.SELECTED_PLAYERS.PLAYER
+			playerSlotIndex = playerSlotIndex + 1
+			-- Check if index needs to loop around
+			if enemySlotIndex == #enemyBattlers then
+				enemySlotIndex = 1
+				playerSlotIndex = 1
+			end
         end
         return selectedPlayer
     end
