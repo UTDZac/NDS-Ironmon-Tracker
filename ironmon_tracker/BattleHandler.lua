@@ -23,7 +23,7 @@ local function BattleHandler(
     local playerBattleTeamPIDs = {list = {}}
     local enemyBattlers = {}
     local playerMonIndex = 0
-	local playerSlotIndex = 1
+    local playerSlotIndex = 1
     local faintMonIndex = -1
     local firstBattleComplete = false
     local battleDataFetched = false
@@ -282,11 +282,11 @@ local function BattleHandler(
             lastValidPlayerBattlePID = activePID
         end
         local monIndex = playerBattleTeamPIDs[activePID]
-		if settings.battle.DOUBLES_MODE and playerSlotIndex > 1 then
+        if settings.battle.DOUBLES_MODE and playerSlotIndex > 1 then
             local nextMonAddr = memoryAddresses.playerBattleMonPID + gameInfo.ACTIVE_PID_DIFFERENCE
             activePID = Memory.read_u32_le(nextMonAddr)
-			monIndex = playerBattleTeamPIDs[activePID] or (playerSlotIndex - 1)
-		end
+            monIndex = playerBattleTeamPIDs[activePID] or (playerSlotIndex - 1)
+        end
         if monIndex ~= nil then
             playerMonIndex = monIndex
             return self.getPokemonDataPlayerBySlot(monIndex, currentPlayerPokemon)
@@ -605,7 +605,7 @@ local function BattleHandler(
         lastValidPlayerBattlePID = -1
         inBattle = true
         battleDataFetched = false
-		playerSlotIndex = 1
+        playerSlotIndex = 1
         enemySlotIndex = 1
         playerBattleTeamPIDs = {}
         enemyBattlers = {}
@@ -644,31 +644,31 @@ local function BattleHandler(
 
     function self.updateSlotIndex(selectedPlayer)
         if selectedPlayer == program.SELECTED_PLAYERS.PLAYER then
-			selectedPlayer = program.SELECTED_PLAYERS.ENEMY
-			if settings.battle.DOUBLES_MODE then
-				enemySlotIndex = playerSlotIndex
-			else
-	            enemySlotIndex = 1
-			end
+            selectedPlayer = program.SELECTED_PLAYERS.ENEMY
+            if settings.battle.DOUBLES_MODE then
+                enemySlotIndex = playerSlotIndex
+            else
+                enemySlotIndex = 1
+            end
         else
-			-- Swap back to the player if playing doubles, otherwise show next enemy
-			if settings.battle.DOUBLES_MODE then
-				selectedPlayer = program.SELECTED_PLAYERS.PLAYER
-				playerSlotIndex = playerSlotIndex + 1
-				-- Check if index needs to loop around
-				if enemySlotIndex == #enemyBattlers then
-					enemySlotIndex = 1
-					playerSlotIndex = 1
-				end
-			else
-				enemySlotIndex = enemySlotIndex + 1
-				-- Check if index needs to loop around
-				if enemySlotIndex > #enemyBattlers then
-					selectedPlayer = program.SELECTED_PLAYERS.PLAYER
-					enemySlotIndex = 1
-					playerSlotIndex = 1
-				end
-			end
+            -- Swap back to the player if playing doubles, otherwise show next enemy
+            if settings.battle.DOUBLES_MODE then
+                selectedPlayer = program.SELECTED_PLAYERS.PLAYER
+                playerSlotIndex = playerSlotIndex + 1
+                -- Check if index needs to loop around
+                if enemySlotIndex == #enemyBattlers then
+                    enemySlotIndex = 1
+                    playerSlotIndex = 1
+                end
+            else
+                enemySlotIndex = enemySlotIndex + 1
+                -- Check if index needs to loop around
+                if enemySlotIndex > #enemyBattlers then
+                    selectedPlayer = program.SELECTED_PLAYERS.PLAYER
+                    enemySlotIndex = 1
+                    playerSlotIndex = 1
+                end
+            end
 
         end
         return selectedPlayer

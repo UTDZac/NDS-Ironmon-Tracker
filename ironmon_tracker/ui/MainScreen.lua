@@ -784,19 +784,19 @@ local function MainScreen(initialSettings, initialTracker, initialProgram)
         ui.frames.tourneyPointsFrame.setVisibility(showTourneyPoints)
         local healingTotals = program.getHealingTotals()
         local statusTotals = program.getStatusTotals()
-		local lastDamageTaken = program.getLastDamageTaken()
+        local lastDamageTaken = program.getLastDamageTaken()
         if healingTotals == nil then
             healingTotals = {healing = 0, numHeals = 0}
         end
         hoverListeners.healingItemsHoverListener.setOnHoverParams({items = program.getHealingItems(), itemType = "Healing"})
         ui.controls.healsLabel.setText("Heals: " .. healingTotals.healing .. "% (" .. healingTotals.numHeals .. ")")
-		if settings.battle.SHOW_DAMAGE_TAKEN and program.isInBattle() and lastDamageTaken > 0 then
-			hoverListeners.statusItemsHoverListener.setOnHoverParams({items = program.getLastDamageHits(), itemType = "Damage Hits"})
-			ui.controls.statusItemsLabel.setText("HP lost: " .. lastDamageTaken)
-		else
-			hoverListeners.statusItemsHoverListener.setOnHoverParams({items = program.getStatusItems(), itemType = "Status"})
-			ui.controls.statusItemsLabel.setText("Status items: " .. statusTotals)
-		end
+        if settings.battle.SHOW_DAMAGE_TAKEN and program.isInBattle() and lastDamageTaken > 0 then
+            hoverListeners.statusItemsHoverListener.setOnHoverParams({items = program.getLastDamageHits(), itemType = "Damage Hits"})
+            ui.controls.statusItemsLabel.setText("HP lost: " .. lastDamageTaken)
+        else
+            hoverListeners.statusItemsHoverListener.setOnHoverParams({items = program.getStatusItems(), itemType = "Status"})
+            ui.controls.statusItemsLabel.setText("Status items: " .. statusTotals)
+        end
         ui.frames.enemyNoteFrame.setVisibility(isEnemy or inPastRunView)
         ui.controls.noteIcon.setVisibility(not inPastRunView)
         ui.frames.healFrame.setVisibility(not isEnemy and not inPastRunView)

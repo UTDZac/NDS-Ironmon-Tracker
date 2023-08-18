@@ -334,23 +334,23 @@ local function readItemDataIntoFrame(items, itemType, itemHolderFrame)
     local sortedKeys = ItemData.HEALING_ID_SORT_ORDER
     if itemType == "Status" then
         sortedKeys = ItemData.STATUS_ID_SORT_ORDER
-	elseif itemType == "Damage Hits" then
-		sortedKeys = {}
-		for i = 1, #items, 1 do
-			table.insert(sortedKeys, i)
-		end
+    elseif itemType == "Damage Hits" then
+        sortedKeys = {}
+        for i = 1, #items, 1 do
+            table.insert(sortedKeys, i)
+        end
     end
     for _, sortedKey in pairs(sortedKeys) do
         local itemData = ItemData.HEALING_ITEMS[sortedKey]
         if itemType == "Status" then
             itemData = ItemData.STATUS_ITEMS[sortedKey]
-		elseif itemType == "Damage Hits" then
-			itemData = {} -- No extra data needed
-			-- If only real one non-total damage entry, don't show the "Total"
-			if sortedKey == 2 and #items == 2 then
-				break
-			end
-		end
+        elseif itemType == "Damage Hits" then
+            itemData = {} -- No extra data needed
+            -- If only real one non-total damage entry, don't show the "Total"
+            if sortedKey == 2 and #items == 2 then
+                break
+            end
+        end
         if items[sortedKey] then
             local quantity = items[sortedKey]
             local name = itemData.name
@@ -362,9 +362,9 @@ local function readItemDataIntoFrame(items, itemType, itemHolderFrame)
                 end
             end
             local extra = ""
-			local formatFunc = function(q, n, e)
-				return string.format("%s %s (%s)", q, n, e)
-			end
+            local formatFunc = function(q, n, e)
+                return string.format("%s %s (%s)", q, n, e)
+            end
             if itemType == "Healing" then
                 extra = itemData.amount
                 if itemData.type == ItemData.HEALING_TYPE.CONSTANT then
@@ -374,20 +374,20 @@ local function readItemDataIntoFrame(items, itemType, itemHolderFrame)
                 end
             elseif itemType == "Status" then
                 extra = itemData.status
-			elseif itemType == "Damage Hits" then
-				name = "damage" -- unused
-				extra = string.format("#%s", sortedKey)
-				formatFunc = function(q, n, e)
-					local damageLabel = q .. " " .. n
-					return string.format("%-8s%s", e .. ":", damageLabel)
-				end
-				-- Special format for the final item, which is total damage
-				if sortedKey == #items then
-					formatFunc = function(q, n, e)
-						local damageLabel = q .. " " .. n
-						return string.format("%-8s%s", "Total:", damageLabel)
-					end
-				end
+            elseif itemType == "Damage Hits" then
+                name = "damage" -- unused
+                extra = string.format("#%s", sortedKey)
+                formatFunc = function(q, n, e)
+                    local damageLabel = q .. " " .. n
+                    return string.format("%-8s%s", e .. ":", damageLabel)
+                end
+                -- Special format for the final item, which is total damage
+                if sortedKey == #items then
+                    formatFunc = function(q, n, e)
+                        local damageLabel = q .. " " .. n
+                        return string.format("%-8s%s", "Total:", damageLabel)
+                    end
+                end
             end
             local text = formatFunc(quantity, name, extra)
             TextLabel(
@@ -448,10 +448,10 @@ function HoverFrameFactory.createItemBagHoverFrame(items, mainFrame, itemType)
     if itemType == "Status" then
         xPadding = 29
     end
-	local textHeaderText = itemType
-	if itemType ~= "Damage Hits" then
-		textHeaderText = textHeaderText .. " Items"
-	end
+    local textHeaderText = itemType
+    if itemType ~= "Damage Hits" then
+        textHeaderText = textHeaderText .. " Items"
+    end
     local textHeader =
         TextLabel(
         Component(
