@@ -592,11 +592,11 @@ local function Program(initialTracker, initialMemoryAddresses, initialGameInfo, 
 		dr.curHP = pokemon.curHP
 		dr.maxHP = pokemon.stats.HP
 
-		-- If a change in damage taken occurs, add it to the total to show, then delay showing it for about 5 secs
+		-- If a change in damage taken occurs, add it to the total to show, then delay showing it for about 6 secs
 		-- The delay helps 1) prevent spoilers and 2) accumulate multi-hit and extra damage
 		if curLastDamage > 0 then
 			table.insert(dr.hitsToProcess, curLastDamage)
-			frameCounters["tryShowDamageInfo" .. pokemon.pid] = FrameCounter(5 * 60, tryShowDamageInfo, pokemon.pid)
+			frameCounters["tryShowDamageInfo" .. pokemon.pid] = FrameCounter(360, tryShowDamageInfo, pokemon.pid, true)
 		end
 
 		-- Also update damage taken for teammate
