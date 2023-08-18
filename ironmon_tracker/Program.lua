@@ -65,6 +65,7 @@ local function Program(initialTracker, initialMemoryAddresses, initialGameInfo, 
 	local inLockedView = false
 	local statusItems = nil
 	local playerPokemon = nil
+	local playerPokemon2 = nil
 	local enemyPokemon = nil
 	local activeColorPicker = nil
 	local canDraw = true
@@ -528,78 +529,98 @@ local function Program(initialTracker, initialMemoryAddresses, initialGameInfo, 
 		currentLocation = areaName
 	end
 
-	local lastDamageInfo = {}
+	local damageRecords = {}
 
-	local function tryShowDamageInfo()
-		frameCounters["tryShowDamageInfo"] = nil
+	local function tryShowDamageInfo(pid)
+        if pid == nil then return end
+
+        -- Remove the frame counter, since the damage hits are about to be processed
+		frameCounters["tryShowDamageInfo" .. pid] = nil
+        local dr = damageRecords[pid] or {}
 		if not battleHandler.isInBattle() then
-			lastDamageInfo.displayAmt = 0
-			lastDamageInfo.displayHits = {}
-			lastDamageInfo.allHits = {}
+			dr.hitsToProcess = {}
+			dr.displayAmt = 0
+			dr.displayHits = {}
 			return
 		end
-		lastDamageInfo.displayAmt = 0
-		lastDamageInfo.displayHits = {}
-		for _, hit in pairs(lastDamageInfo.allHits or {}) do
-			lastDamageInfo.displayAmt = lastDamageInfo.displayAmt + hit
-			table.insert(lastDamageInfo.displayHits, hit)
+		dr.displayAmt = 0
+		dr.displayHits = {}
+		for _, hit in pairs(dr.hitsToProcess or {}) do
+			dr.displayAmt = dr.displayAmt + hit
+			table.insert(dr.displayHits, hit)
 		end
-		-- Add the total at the end
-		table.insert(lastDamageInfo.displayHits, lastDamageInfo.displayAmt)
-		lastDamageInfo.allHits = {}
+		-- Add the total at the end, then clear out the processed hits
+		table.insert(dr.displayHits, dr.displayAmt)
+		dr.hitsToProcess = {}
 	end
 
-	local function updateLastDamageInfo()
-		if not playerPokemon or playerPokemon.pokemonID == 0 or playerPokemon.pid == 0 then
+	local function updateLastDamageInfo(pokemon)
+        local shouldCheckTeammate = settings.battle.DOUBLES_MODE and pokemon == nil
+        -- Default to showing the player's viewed pokemon
+		pokemon = pokemon or playerPokemon
+		if not pokemon or pokemon.pokemonID == 0 or pokemon.pid == 0 then
+			return
+		end
+        if not battleHandler.isInBattle() then
+			damageRecords = {}
 			return
 		end
 
 		local resetInfo = function(pid)
-			lastDamageInfo[pid] = {
-				curHP = playerPokemon.curHP,
-				maxHP = playerPokemon.stats.HP,
-				lastDamage = 0,
+			damageRecords[pid] = {
+				curHP = pokemon.curHP,
+				maxHP = pokemon.stats.HP,
+				hitsToProcess = {}, -- Cumulative damage source hits to total together
+				displayAmt = 0, -- After damage total is processed, record it here
+                displayHits = {}, -- After damage sources are processed, record each here
 			}
-			lastDamageInfo.displayAmt = 0
-			lastDamageInfo.allHits = {}
 		end
 
 		-- If no record for this active Pokémon's last damage info exists, create it
-		if not lastDamageInfo[playerPokemon.pid] then
-			resetInfo(playerPokemon.pid)
+		if not damageRecords[pokemon.pid] then
+			resetInfo(pokemon.pid)
 		end
-		local prevInfo = lastDamageInfo[playerPokemon.pid]
-		if not battleHandler.isInBattle() or not prevInfo.curHP then
-			resetInfo(playerPokemon.pid)
-			return
-		end
+		local dr = damageRecords[pokemon.pid]
 
 		-- TODO: Make sure this works if the player's active pokemon transforms
-		-- TODO: Test in doubles battles (should work, in theory)
 
 		-- Determine amount of damage taken by comparing missing HP values before-and-after
-		local prevMissingHP = prevInfo.maxHP - prevInfo.curHP
-		local curMissingHP = playerPokemon.stats.HP - playerPokemon.curHP
-		local curLastDamage = curMissingHP - prevMissingHP
+		local prevMissingHP = dr.maxHP - dr.curHP
+		local curMissingHP = pokemon.stats.HP - pokemon.curHP
+		local curLastDamage = math.max(curMissingHP - prevMissingHP, 0) -- Ignore heals (negative damage)
 		-- Record the changes in HPs for future comparisons
-		prevInfo.curHP = playerPokemon.curHP
-		prevInfo.maxHP = playerPokemon.stats.HP
-		prevInfo.lastDamage = math.max(curLastDamage, 0) -- Ignore heals (negative damage)
+		dr.curHP = pokemon.curHP
+		dr.maxHP = pokemon.stats.HP
 
 		-- If a change in damage taken occurs, add it to the total to show, then delay showing it for about 5 secs
 		-- The delay helps 1) prevent spoilers and 2) accumulate multi-hit and extra damage
 		if curLastDamage > 0 then
-			table.insert(lastDamageInfo.allHits, curLastDamage)
-			frameCounters["tryShowDamageInfo"] = FrameCounter(5 * 60, tryShowDamageInfo)
+			table.insert(dr.hitsToProcess, curLastDamage)
+			frameCounters["tryShowDamageInfo" .. pokemon.pid] = FrameCounter(5 * 60, tryShowDamageInfo, pokemon.pid)
+		end
+
+		-- Also update damage taken for teammate
+		if shouldCheckTeammate then
+    		local pokemonToCheck = battleHandler.getPokemonDataPlayerTeammate(playerPokemon2)
+			if MiscUtils.validPokemonData(pokemonToCheck) then
+				playerPokemon2 = pokemonToCheck
+                updateLastDamageInfo(playerPokemon2)
+			end
 		end
 	end
 
+    -- Returns the damage taken for the player's pokemon currently being viewed
 	function self.getLastDamageTaken()
-		return lastDamageInfo.displayAmt or 0
+        local pid = playerPokemon.pid or false
+        local dr = damageRecords[pid] or {}
+		return dr.displayAmt or 0
 	end
 
+    -- Returns the list of damage hits from recent accumulated sources for the player's pokemon currently being viewed
 	function self.getLastDamageHits()
-		return lastDamageInfo.displayHits or {}
+        local pid = playerPokemon.pid or false
+        local dr = damageRecords[pid] or {}
+		return dr.displayHits or {}
 	end
 
 	function self.getCurrentLocation()

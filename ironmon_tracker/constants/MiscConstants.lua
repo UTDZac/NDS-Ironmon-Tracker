@@ -32,8 +32,10 @@ MiscConstants.DEFAULT_SETTINGS = {
         CALCULATE_VARIABLE_DAMAGE = true,
         SHOW_MOVE_EFFECTIVENESS = true,
         SHOW_ACTUAL_ENEMY_PP = true,
+        SHOW_DAMAGE_TAKEN = false,
         SHOW_1ST_FIGHT_STATS_PLATINUM = true,
-        ENABLE_ENEMY_LOCKING = false
+        ENABLE_ENEMY_LOCKING = false,
+        DOUBLES_MODE = false
     },
     colorScheme = {
         ["Main background color"] = 4278190080,

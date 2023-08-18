@@ -273,7 +273,6 @@ local function BattleHandler(
         if not battleDataFetched then
             return
         end
-        local currentBase = memoryAddresses.playerBattleBase
         local activePID
         local transformed = checkForPlayerTransform()
         if transformed then
@@ -283,19 +282,43 @@ local function BattleHandler(
             lastValidPlayerBattlePID = activePID
         end
         local monIndex = playerBattleTeamPIDs[activePID]
-		if playerSlotIndex > 1 then
-			monIndex = playerSlotIndex - 1
+		if settings.battle.DOUBLES_MODE and playerSlotIndex > 1 then
+            local nextMonAddr = memoryAddresses.playerBattleMonPID + gameInfo.ACTIVE_PID_DIFFERENCE
+            activePID = Memory.read_u32_le(nextMonAddr)
+			monIndex = playerBattleTeamPIDs[activePID] or (playerSlotIndex - 1)
 		end
         if monIndex ~= nil then
             playerMonIndex = monIndex
-            pokemonDataReader.setCurrentBase(currentBase + monIndex * gameInfo.ENCRYPTED_POKEMON_SIZE)
-            local data = pokemonDataReader.decryptPokemonInfo(false, monIndex, false)
-            if currentPlayerPokemon ~= nil and gameInfo.GEN == 5 then
-                GEN5_checkPlayerTransform(currentPlayerPokemon, data)
-                if GEN5_transformed then
-                    return nil
-                end
+            return self.getPokemonDataPlayerBySlot(monIndex, currentPlayerPokemon)
+        end
+    end
+
+    function self.getPokemonDataPlayerBySlot(monIndex, currentPlayerPokemon)
+        local currentBase = memoryAddresses.playerBattleBase
+        pokemonDataReader.setCurrentBase(currentBase + monIndex * gameInfo.ENCRYPTED_POKEMON_SIZE)
+        local data = pokemonDataReader.decryptPokemonInfo(false, monIndex, false)
+        if currentPlayerPokemon ~= nil and gameInfo.GEN == 5 then
+            GEN5_checkPlayerTransform(currentPlayerPokemon, data)
+            if GEN5_transformed then
+                return nil
             end
+        end
+        return data
+    end
+
+    function self.getPokemonDataPlayerTeammate(currentPlayerPokemon2)
+        -- Determine the monIndex for your active team's other mon
+        local otherMonAddr = memoryAddresses.playerBattleMonPID + gameInfo.ACTIVE_PID_DIFFERENCE
+        if playerSlotIndex > 1 then
+            otherMonAddr = memoryAddresses.playerBattleMonPID
+        end
+        local activePID = Memory.read_u32_le(otherMonAddr)
+        local monIndex = playerBattleTeamPIDs[activePID]
+        if monIndex ~= nil then
+            -- Don't permanently save transform status for the teammate pokemon
+            local tempGen5Transform = GEN5_transformed
+            local data = self.getPokemonDataPlayerBySlot(monIndex, currentPlayerPokemon2)
+            GEN5_transformed = tempGen5Transform
             return data
         end
     end
@@ -622,15 +645,31 @@ local function BattleHandler(
     function self.updateSlotIndex(selectedPlayer)
         if selectedPlayer == program.SELECTED_PLAYERS.PLAYER then
 			selectedPlayer = program.SELECTED_PLAYERS.ENEMY
-            enemySlotIndex = playerSlotIndex
-        else
-            selectedPlayer = program.SELECTED_PLAYERS.PLAYER
-			playerSlotIndex = playerSlotIndex + 1
-			-- Check if index needs to loop around
-			if enemySlotIndex == #enemyBattlers then
-				enemySlotIndex = 1
-				playerSlotIndex = 1
+			if settings.battle.DOUBLES_MODE then
+				enemySlotIndex = playerSlotIndex
+			else
+	            enemySlotIndex = 1
 			end
+        else
+			-- Swap back to the player if playing doubles, otherwise show next enemy
+			if settings.battle.DOUBLES_MODE then
+				selectedPlayer = program.SELECTED_PLAYERS.PLAYER
+				playerSlotIndex = playerSlotIndex + 1
+				-- Check if index needs to loop around
+				if enemySlotIndex == #enemyBattlers then
+					enemySlotIndex = 1
+					playerSlotIndex = 1
+				end
+			else
+				enemySlotIndex = enemySlotIndex + 1
+				-- Check if index needs to loop around
+				if enemySlotIndex > #enemyBattlers then
+					selectedPlayer = program.SELECTED_PLAYERS.PLAYER
+					enemySlotIndex = 1
+					playerSlotIndex = 1
+				end
+			end
+
         end
         return selectedPlayer
     end

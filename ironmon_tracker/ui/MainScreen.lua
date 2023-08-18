@@ -790,7 +790,7 @@ local function MainScreen(initialSettings, initialTracker, initialProgram)
         end
         hoverListeners.healingItemsHoverListener.setOnHoverParams({items = program.getHealingItems(), itemType = "Healing"})
         ui.controls.healsLabel.setText("Heals: " .. healingTotals.healing .. "% (" .. healingTotals.numHeals .. ")")
-		if program.isInBattle() and lastDamageTaken > 0 then
+		if settings.battle.SHOW_DAMAGE_TAKEN and program.isInBattle() and lastDamageTaken > 0 then
 			hoverListeners.statusItemsHoverListener.setOnHoverParams({items = program.getLastDamageHits(), itemType = "Damage Hits"})
 			ui.controls.statusItemsLabel.setText("HP lost: " .. lastDamageTaken)
 		else

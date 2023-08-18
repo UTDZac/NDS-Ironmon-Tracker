@@ -12,7 +12,7 @@ local function BattleOptionsScreen(initialSettings, initialTracker, initialProgr
     local tracker = initialTracker
     local program = initialProgram
     local constants = {
-        BATTLE_OPTIONS_HEIGHT = 138,
+        BATTLE_OPTIONS_HEIGHT = 166,
         TOGGLE_FRAME_WIDTH = 200,
         TOGGLE_FRAME_HEIGHT = 12,
         BUTTON_SIZE = 10
@@ -37,8 +37,10 @@ local function BattleOptionsScreen(initialSettings, initialTracker, initialProgr
             "SHOW_MOVE_EFFECTIVENESS",
             "CALCULATE_VARIABLE_DAMAGE",
             "SHOW_ACTUAL_ENEMY_PP",
+            "SHOW_DAMAGE_TAKEN",
             "SHOW_1ST_FIGHT_STATS_PLATINUM",
-            "ENABLE_ENEMY_LOCKING"
+            "ENABLE_ENEMY_LOCKING",
+            "DOUBLES_MODE"
         }
         for _, key in pairs(orderedKeys) do
             local frame =
