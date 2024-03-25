@@ -1,12 +1,11 @@
 MiscConstants = {}
 
-MiscConstants.TRACKER_VERSION = "5.6.1"
+MiscConstants.TRACKER_VERSION = "6.0.3"
 
 MiscConstants.BIZHAWK_VERSION = client.getversion()
 
 MiscConstants.UPDATE_NOTES = {
-    "-- Fixed a critical error where the tracker could get stuck trying to load for Black/White 2 (thanks UTDZac).",
-    "-- Fixed a bug where the experience bar could overlap with the FRIEND meter."
+    "-- Minor bug fixes."
 }
 
 MiscConstants.DEFAULT_SETTINGS = {
@@ -17,15 +16,23 @@ MiscConstants.DEFAULT_SETTINGS = {
         SHOW_ACCURACY_AND_EVASION = true,
         RANDOM_BALL_PICKER = true,
         SHOW_POKECENTER_HEALS = false,
+        SHOW_NICKNAME = false,
         ICON_SET_INDEX = 2,
-        BLIND_MODE = false
+        BLIND_MODE = false,
+        REPEL_ICON = false
+    },
+    animatedSprites = {
+        FASTER_ANIMATIONS = false,
+        CHANGE_DIRECTION = false
     },
     controls = {
         CHANGE_VIEW = "Start",
         LOAD_NEXT_SEED = "A B Start Select",
         CYCLE_STAT = "L",
         CYCLE_PREDICTION = "R",
-        LOCK_ENEMY = "Select"
+        LOCK_ENEMY = "Select",
+        LEFT_EFFECTIVENESS = "L",
+        RIGHT_EFFECTIVENESS = "R"
     },
     battle = {
         AUTO_SWAP_TO_ENEMY = false,
@@ -90,6 +97,15 @@ MiscConstants.DEFAULT_SETTINGS = {
     },
     tourneyTracker = {
         ENABLED = false
+    },
+    coverageCalc = {
+        FULLY_EVOLVED_ONLY = false
+    },
+    timer = {
+        ENABLED = false,
+        TRANSPARENT = false,
+        XPOS = 0,
+        YPOS = 180.5
     }
 }
 
@@ -122,6 +138,14 @@ MiscConstants.DEFAULT_POKEMON = {
         SPE = "---",
         SPA = "---",
         SPD = "---"
+    },
+    EVs = {
+        HP = 0,
+        ATK = 0,
+        DEF = 0,
+        SPE = 0,
+        SPA = 0,
+        SPD = 0
     },
     isEgg = 0,
     nature = 0,
